@@ -1,9 +1,9 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const Tour = require('../model/tourModel');
-const Booking = require('../model/bookingModel');
+const Tour = require('../models/tourModel');
+const Booking = require('../models/bookingModel');
 const catchAsync = require('../utils/catchAsync');
 const factory = require('./handlerFactory');
-const User = require('../model/userModel');
+const User = require('../models/userModel');
 
 exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   //get the currently booked tour
@@ -13,9 +13,6 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     mode: 'payment',
-    // success_url: `${req.protocol}://${req.get('host')}/my-tours/?tour=${
-    //   req.params.tourId
-    // }&user=${req.user.id}&price=${tour.price}`,
     success_url: `${req.protocol}://${req.get('host')}/my-tours`,
     cancel_url: `${req.protocol}://${req.get('host')}/tour/${tour.slug}`,
     customer_email: req.user.email,
@@ -39,7 +36,7 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
       },
     ],
   });
-
+  console.log('session', session);
   //create session as response
   res.status(200).json({
     status: 'success',
@@ -56,9 +53,11 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
 //   res.redirect(req.originalUrl.split('?')[0]);
 // });
 const createBookingCheckout = async (session) => {
+  console.log('sessioninside', session);
   const tour = session.client_reference_id;
   const user = (await User.findOne({ email: session.customer_email })).id;
   const price = session.line_items[0].price_data.unit_amount / 100;
+  console.log('first', tour, user, price);
   await Booking.create({ tour, user, price });
 };
 
