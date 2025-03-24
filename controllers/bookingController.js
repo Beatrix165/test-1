@@ -78,7 +78,7 @@ exports.webhookCheckout = async (req, res) => {
   if (event.type === 'checkout.session.completed')
     createBookingCheckout(event.data.object);
 
-  req.status(200).json({ received: true });
+  res.status(200).json({ received: true });
 };
 
 exports.createBookings = factory.CreateOne(Booking);
